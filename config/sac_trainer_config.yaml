@@ -165,8 +165,8 @@ CrawlerStaticLearning:
     max_steps: 5e5
     summary_freq: 3000
     init_entcoef: 1.0
-    num_layers: 3
-    hidden_units: 512
+    num_layers: 2
+    hidden_units: 256
 
 CrawlerDynamicLearning:
     normalize: true
@@ -175,9 +175,10 @@ CrawlerDynamicLearning:
     buffer_size: 500000
     summary_freq: 3000
     train_interval: 3
-    num_layers: 3
+    num_layers: 2
     max_steps: 1e6
-    hidden_units: 512
+    save_replay_buffer: true
+    hidden_units: 256
 
 WalkerLearning:
     normalize: true
@@ -249,8 +250,8 @@ GridWorldLearning:
     num_layers: 1
     hidden_units: 128
     init_entcoef: 0.01
-    buffer_size: 50000
-    max_steps: 5.0e5
+    buffer_size: 10000
+    max_steps: 2.0e5
     summary_freq: 2000
     time_horizon: 5
     reward_signals:
