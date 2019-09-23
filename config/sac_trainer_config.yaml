@@ -188,7 +188,7 @@ WalkerLearning:
     summary_freq: 3000
     num_layers: 2
     train_interval: 2
-    hidden_units: 512
+    hidden_units: 256
     reward_signals:
         extrinsic:
             strength: 1.0
