@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using MLAgents.CommunicatorObjects;
 using UnityEngine;
 
 namespace MLAgents
@@ -39,14 +40,14 @@ namespace MLAgents
         ICommunicator m_Communicator;
 
         /// The current UnityRLOutput to be sent when all the brains queried the batcher
-        CommunicatorObjects.UnityRLOutput m_CurrentUnityRlOutput =
-            new CommunicatorObjects.UnityRLOutput();
+        UnityRLOutput m_CurrentUnityRlOutput =
+            new UnityRLOutput();
 
         /// Keeps track of last CommandProto sent by External
-        CommunicatorObjects.CommandProto m_Command;
+        CommandProto m_Command;
 
         /// Keeps track of last EnvironmentParametersProto sent by External
-        CommunicatorObjects.EnvironmentParametersProto m_EnvironmentParameters;
+        EnvironmentParametersProto m_EnvironmentParameters;
 
         /// Keeps track of last training mode sent by External
         bool m_IsTraining;
@@ -63,21 +64,51 @@ namespace MLAgents
             m_Communicator = communicator;
         }
 
+        public UnityRLInitializationInput SendAcademyParameters(
+            string apiVersion,
+            string academyName,
+            BroadcastHub broadcastHub,
+            IEnumerable<Brain> exposedBrains,
+            ResetParameters resetParameters)
+        {
+            var academyParameters = new UnityRLInitializationOutput
+            {
+                Name = academyName,
+                Version = apiVersion
+            };
+            foreach (var brain in exposedBrains)
+            {
+                var bp = brain.brainParameters;
+                academyParameters.BrainParameters.Add(
+                    bp.ToProto(brain.name, broadcastHub.IsControlled(brain)));
+            }
+            academyParameters.EnvironmentParameters =
+                new EnvironmentParametersProto();
+            foreach (var key in resetParameters.Keys)
+            {
+                academyParameters.EnvironmentParameters.FloatParameters.Add(
+                    key, resetParameters[key]
+                );
+            }
+
+            return SendAcademyParameters(academyParameters);
+        }
+
         /// <summary>
         /// Sends the academy parameters through the Communicator.
         /// Is used by the academy to send the AcademyParameters to the communicator.
         /// </summary>
         /// <returns>The External Initialization Parameters received.</returns>
         /// <param name="academyParameters">The Unity Initialization Parameters to be sent.</param>
-        public CommunicatorObjects.UnityRLInitializationInput SendAcademyParameters(
-            CommunicatorObjects.UnityRLInitializationOutput academyParameters)
+        private UnityRLInitializationInput SendAcademyParameters(
+            UnityRLInitializationOutput academyParameters)
         {
-            CommunicatorObjects.UnityInput input;
-            var initializationInput = new CommunicatorObjects.UnityInput();
+            UnityInput input;
+            UnityInput initializationInput;
             try
             {
                 initializationInput = m_Communicator.Initialize(
-                    new CommunicatorObjects.UnityOutput
+                    new UnityOutput
                     {
                         RlInitializationOutput = academyParameters
                     },
@@ -110,7 +141,7 @@ namespace MLAgents
         /// Gets the command. Is used by the academy to get reset or quit signals.
         /// </summary>
         /// <returns>The current command.</returns>
-        public CommunicatorObjects.CommandProto GetCommand()
+        public CommandProto GetCommand()
         {
             return m_Command;
         }
@@ -129,7 +160,7 @@ namespace MLAgents
         /// the environment parameters.
         /// </summary>
         /// <returns>The environment parameters.</returns>
-        public CommunicatorObjects.EnvironmentParametersProto GetEnvironmentParameters()
+        public EnvironmentParametersProto GetEnvironmentParameters()
         {
             return m_EnvironmentParameters;
         }
@@ -227,7 +258,7 @@ namespace MLAgents
         void SendBatchedMessageHelper()
         {
             var input = m_Communicator.Exchange(
-                new CommunicatorObjects.UnityOutput
+                new UnityOutput
                 {
                     RlOutput = m_CurrentUnityRlOutput
                 });
@@ -240,7 +271,7 @@ namespace MLAgents
 
             if (input == null)
             {
-                m_Command = CommunicatorObjects.CommandProto.Quit;
+                m_Command = CommandProto.Quit;
                 return;
             }
 
@@ -248,7 +279,7 @@ namespace MLAgents
 
             if (rlInput == null)
             {
-                m_Command = CommunicatorObjects.CommandProto.Quit;
+                m_Command = CommandProto.Quit;
                 return;
             }
 
