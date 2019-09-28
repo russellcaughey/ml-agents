@@ -65,6 +65,12 @@ following new paths.
 %UserProfile%\Anaconda3\python.exe
 ```
 
+If you get a LoadLibrary() error you need to activate Conda.
+```sh
+C:\path\to\Anaconda3\condabin\activate.bat
+conda init cmd.exe
+```
+
 ## Step 2: Setup and Activate a New Conda Environment
 
 You will create a new [Conda environment](https://conda.io/docs/) to be used
